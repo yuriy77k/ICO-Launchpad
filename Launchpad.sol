@@ -112,17 +112,21 @@ contract Launchpad is Ownable {
     mapping (uint256 ICOid => ICOState) public icoState;
     uint256 public counter; // counter of ICOs
     bool public isPaused;    // launchpad is paused
-
+    // TODO: fee in usdt
+    address public feeReceiver;    // address of receiver of fee
+    uint256 public fee;            // percentage of fee with 2 decimals. I.e. 250 = 2.5%
     event BuyToken(address buyer, uint256 ICO_id, uint256 amountPaid, uint256 amountBought, uint256 bonus);
     event ICOCreated(uint256 ICO_id, address token, address owner, address vestingContract);
     event CloseICO(uint256 ICO_id, address owner, address token, uint256 refund);
 
     // initialize if use upgradable proxy
-    function initialize(address vestingImplementation_) external {
+    function initialize(address vestingImplementation_, address feeReceiver_) external {
         require(_owner == address(0), "Already init");
         _owner = msg.sender;
         emit OwnershipTransferred(address(0), msg.sender);
         vestingImplementation = vestingImplementation_;
+        feeReceiver = feeReceiver_;
+        fee = 250;  // 2.5% fee
     }
 
     modifier checkICO(uint256 id) {
@@ -131,6 +135,18 @@ contract Launchpad is Ownable {
         require(!icoState[id].isClosed, "ICO is closed");
         require(!isPaused, "Launchpad is paused");
         _;
+    }
+
+    // set address of receiver of fee
+    function setFeeReceiver(address feeReceiver_) external onlyOwner() {
+        require(feeReceiver_ != address(0));
+        feeReceiver = feeReceiver_;
+    }
+
+    // set percentage of fee with 2 decimals. I.e. 250 = 2.5%
+    function setFee(uint256 fee_) external onlyOwner() {
+        require(fee_ < 10000);
+        fee = fee_;
     }
 
     // returns ICO details by ICO id
@@ -200,12 +216,15 @@ contract Launchpad is Ownable {
         ICOParams storage p = icoParams[id];
         ICOState storage s = icoState[id];
         address paymentToken = p.paymentToken;
+        uint256 feeAmount = paymentToken * fee / 10000;
         if(paymentToken == address(0)) {    // pay with native coin
             require(msg.value >= amountToPay, "Low payment");
             if (msg.value > amountToPay) safeTransferETH(msg.sender, msg.value - amountToPay);  // return rest
-            safeTransferETH(s.ICOOwner, amountToPay);
+            if (feeAmount != 0) safeTransferETH(feeReceiver, feeAmount);
+            safeTransferETH(s.ICOOwner, amountToPay-feeAmount);
         } else {    // pay with tokens
-            safeTransferFrom(paymentToken, msg.sender, s.ICOOwner, amountToPay);
+            if (feeAmount != 0) safeTransferFrom(paymentToken, msg.sender, feeReceiver, feeAmount);
+            safeTransferFrom(paymentToken, msg.sender, s.ICOOwner, amountToPay-feeAmount);
         }
         s.totalReceived += amountToPay;
         s.totalSold += amountToBuy;
