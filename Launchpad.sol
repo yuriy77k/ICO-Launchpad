@@ -216,7 +216,7 @@ contract Launchpad is Ownable {
         ICOParams storage p = icoParams[id];
         ICOState storage s = icoState[id];
         address paymentToken = p.paymentToken;
-        uint256 feeAmount = paymentToken * fee / 10000;
+        uint256 feeAmount = amountToPay * fee / 10000;
         if(paymentToken == address(0)) {    // pay with native coin
             require(msg.value >= amountToPay, "Low payment");
             if (msg.value > amountToPay) safeTransferETH(msg.sender, msg.value - amountToPay);  // return rest
