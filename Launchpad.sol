@@ -115,6 +115,7 @@ contract Launchpad is Ownable {
     // TODO: fee in usdt
     address public feeReceiver;    // address of receiver of fee
     uint256 public fee;            // percentage of fee with 2 decimals. I.e. 250 = 2.5%
+    uint256 public creationFee;    // fee for creating ICO (in FUMA).
     event BuyToken(address buyer, uint256 ICO_id, uint256 amountPaid, uint256 amountBought, uint256 bonus);
     event ICOCreated(uint256 ICO_id, address token, address owner, address vestingContract);
     event CloseICO(uint256 ICO_id, address owner, address token, uint256 refund);
@@ -149,6 +150,11 @@ contract Launchpad is Ownable {
         fee = fee_;
     }
 
+    // set fee for creating ICO (in FUMA).
+    function setCreationFee(uint256 creationFee_) external onlyOwner() {
+        creationFee = creationFee_;
+    }
+
     // returns ICO details by ICO id
     function getICO(uint256 id) external view returns(ICOParams memory params, ICOState memory state) {
         params = icoParams[id];
@@ -179,7 +185,9 @@ contract Launchpad is Ownable {
     }
 
     // create new ICO. User should approve ICO tokens (amount + bonusReserve)
-    function createICO(ICOParams memory params) external {
+    function createICO(ICOParams memory params) external payable {
+        require(msg.value >= creationFee, "Low fee"); // pay fee in FUMA
+        if (msg.value != 0) safeTransferETH(feeReceiver, msg.value);
         safeTransferFrom(params.token, msg.sender, address(this), params.amount + params.bonusReserve);
         uint256 id = counter;
         ++counter;

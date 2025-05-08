@@ -115,7 +115,7 @@ This function claims unlocked tokens for user.
 ## Fushuma
 
 - Launchpad proxy (use this contract for interaction): https://fumascan.com/address/0x206236eca2dF8FB37EF1d024e1F72f4313f413E4?tab=read_proxy_contract
-- Launchpad implementation (get ABI from it): https://fumascan.com/address/0xe5f2c7f9d39B3e380238F299185f83A3b8573B84?tab=contract
+- Launchpad implementation (get ABI from it): https://fumascan.com/address/0xF03F39910424B96661b09eF72493f63076659E40?tab=contract
 - Vesting implementation (get ABI from it): https://fumascan.com/address/0x0d8e696475b233193d21E565C21080EbF6A3C5DA?tab=contract
 
 - TokensFactory (allow to create token contracts for testing) https://fumascan.com/address/0x8CC2Ef37d9D70E8F23378B1778fbB8bEB2c1a3e5?tab=write_contract
