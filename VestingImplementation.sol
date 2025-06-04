@@ -126,6 +126,7 @@ contract Vesting is Ownable {
         external
         onlyDepositor
     {
+        require(vestingInterval > 0, "Incorrect vestingInterval");
         require(vestingPercentage <= 10000, "Incorrect vestingPercentage");
         require(beneficiaries[to].length < 100, "Too many allocations for one address, use another address");
         safeTransferFrom(vestedToken, msg.sender, address(this), amount);
